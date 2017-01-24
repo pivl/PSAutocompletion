@@ -8,19 +8,19 @@
 
 import UIKit
 
-protocol PSAutocompletionDataSource: class {
+public protocol PSAutocompletionDataSource: class {
     func autocompletion(_ completion: PSAutocompletion, completedForUserText userText:String) -> String?
 }
 
 
-protocol PSAutocompletionDelegate: class {
+public protocol PSAutocompletionDelegate: class {
     func autocompletion(_ completion: PSAutocompletion, didChangeText text: String?)
     func autocompletion(_ completion: PSAutocompletion, willCompleteWithUserText: String, completedText: String)
     func autocompletion(_ completion: PSAutocompletion, didCompleteWithUserText: String, completedText: String)
 }
 
 
-extension PSAutocompletionDelegate {
+public extension PSAutocompletionDelegate {
     
     func autocompletion(_ completion: PSAutocompletion, willCompleteWithUserText: String, completedText: String) {
         
@@ -32,16 +32,16 @@ extension PSAutocompletionDelegate {
 }
 
 
-class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
+open class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
     
-    var autocompleted: Bool {
+    open var autocompleted: Bool {
         get {
             let result = textField.markedTextRange != nil && isSupportedInputLanguage()
             return result
         }
     }
     
-    var notCompletedText: String? {
+    open var notCompletedText: String? {
         didSet(oldValue) {
             if oldValue != notCompletedText {
                 self.delegate?.autocompletion(self, didChangeText: notCompletedText)
@@ -49,14 +49,15 @@ class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
         }
     }
     
-    weak var dataSource: PSAutocompletionDataSource?
-    weak var delegate: PSAutocompletionDelegate?
+    open weak var dataSource: PSAutocompletionDataSource?
+    open weak var delegate: PSAutocompletionDelegate?
     
-    private var textField: UITextField
-    private var lastAutocompletionResult: (String, String)?
-    private var isTextChangedInternally: Bool = false
+    fileprivate var textField: UITextField
+    fileprivate var lastAutocompletionResult: (String, String)?
+    fileprivate var isTextChangedInternally: Bool = false
     
-    init(textField: UITextField) {
+    
+    public init(textField: UITextField) {
         
         self.textField = textField
         
@@ -66,7 +67,7 @@ class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
         assert(textField.spellCheckingType == .no, "textField spellCheckingType must be .no")
         
         textField.addTarget(self, action: #selector(processInput(_:)), for: .editingChanged)
-
+        
         let tapGesture = UITapGestureRecognizer.init(target: nil, action: nil)
         tapGesture.delegate = self
         textField.addGestureRecognizer(tapGesture)
@@ -78,9 +79,9 @@ class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
         textField.removeTarget(self, action: #selector(processInput(_:)), for: .editingChanged)
     }
     
-// MARK: Processing Input
+    // MARK: Processing Input
     
-    @objc func processInput(_ sender: UITextField) {
+    func processInput(_ sender: UITextField) {
         let time = DispatchTime.now() + 0.05
         DispatchQueue.main.asyncAfter(deadline: time) {
             self.processInputDelayed(sender)
@@ -142,15 +143,15 @@ class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
                 self.isTextChangedInternally = false
             }
             /**/
-
+            
         }
         
         notCompletedText = currentText
     }
     
-// MARK: KVO
+    // MARK: KVO
     
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+    override open func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         guard object as! UITextField == textField && keyPath == #keyPath(UITextField.text) else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
@@ -168,16 +169,16 @@ class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
         }
     }
     
-// MARK: <UIGestureRecognizerDelegate>
+    // MARK: <UIGestureRecognizerDelegate>
     
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         
         textField.unmarkText()
         lastAutocompletionResult = nil
         return true
     }
     
-// MARK: Other
+    // MARK: Other
     
     
     func performAutocompletion(text: String) {
@@ -200,7 +201,7 @@ class PSAutocompletion: NSObject, UIGestureRecognizerDelegate {
             lastAutocompletionResult = completionResult
         }
     }
-
+    
     func resultFor(userText: String) -> (String, String)? {
         
         guard !userText.isEmpty else {
